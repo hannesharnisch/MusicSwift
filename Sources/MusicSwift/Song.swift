@@ -12,14 +12,14 @@ import MultipeerConnectivity
 
 #if os(iOS)
 public class Song:Codable,Identifiable{
-    var id = UUID()
-    var sender:String?
-    var title:String
-    var interpret:String
-    var appleMusicSongID:String?
-    var length:CGFloat?
+    public var id = UUID()
+    public var sender:String?
+    public var title:String
+    public var interpret:String
+    public var appleMusicSongID:String?
+    public var length:CGFloat?
     var image:Data?
-    var imageURL:URL?
+    public var imageURL:URL?
     
     public func getImage() ->UIImage?{
         if image != nil{
@@ -72,7 +72,7 @@ class ImageLoader{
         }.resume()
     }
 }
-public extension Song:Hashable,Equatable{
+extension Song:Hashable,Equatable{
     public static func == (lhs: Song, rhs: Song) -> Bool {
         return lhs.title == rhs.title && lhs.interpret == rhs.interpret && (rhs.appleMusicSongID ?? "1") == (lhs.appleMusicSongID ?? "0")
     }
