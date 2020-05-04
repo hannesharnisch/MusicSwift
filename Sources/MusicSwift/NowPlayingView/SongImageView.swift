@@ -9,10 +9,10 @@
 import SwiftUI
 
 #if os(iOS)
-struct SongImageView: View {
-    @Binding var percentage:CGFloat
-    var songImage:UIImage?
-    var body: some View {
+public struct SongImageView: View {
+    public @Binding var percentage:CGFloat
+    public var songImage:UIImage?
+    public var body: some View {
         ZStack {
             if songImage == nil{
                 Rectangle()
