@@ -11,13 +11,22 @@ import Foundation
 
 #if os(iOS)
 public struct NowPlayingInfoView<T:MusicPlayerActionEnabled>: View {
-    public @Binding var showMusikPlaying:CGFloat
-    public var controller:T?
-    public @Binding var nowPlaying:Song?
-    public @Binding var current:CGFloat
-    public @Binding var total:CGFloat
-    public @Binding var enabled:Bool
-    public @Binding var playing:Bool
+    @Binding var showMusikPlaying:CGFloat
+    var controller:T?
+    @Binding var nowPlaying:Song?
+    @Binding var current:CGFloat
+    @Binding var total:CGFloat
+    @Binding var enabled:Bool
+    @Binding var playing:Bool
+    public init(showMusikPlaying:Binding<CGFloat>,controller:T?,nowPlaying:Binding<Song?>,currentPlayBackTime: Binding<CGFloat>,totalPlayBackTime:Binding<CGFloat>,enabled:Binding<Bool>,playing:Binding<Bool>){
+        self._showMusikPlaying = showMusikPlaying
+        self.controller = controller
+        self._nowPlaying = nowPlaying
+        self._current = currentPlayBackTime
+        self._total = totalPlayBackTime
+        self._enabled = enabled
+        self._playing = playing
+    }
     public var body: some View {
         GeometryReader{ geometry in
         VStack{
