@@ -85,9 +85,9 @@ extension Song:Hashable,Equatable{
 
 }
 public class RecievedSong: Song{
-    var status:RecievedSongStatus
-    var acceptFunc:((Song)->Void)!
-    var declineFunc:((Song)->Void)!
+    public var status:RecievedSongStatus
+    public var acceptFunc:((Song)->Void)!
+    public var declineFunc:((Song)->Void)!
     public init(song:Song,sender:String){
         self.status = .recieved
         super.init(title: song.title, interpret: song.interpret)
