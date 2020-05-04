@@ -8,7 +8,7 @@
 #if os(iOS)
 import SwiftUI
 
-struct MusikSlider: View {
+public struct MusikSlider: View {
     @Binding var current:CGFloat
     @Binding var total:CGFloat
     @GestureState var dragOffset = CGSize.zero
@@ -16,7 +16,7 @@ struct MusikSlider: View {
     @State var hasTouchbegun = false
     var frame = ((UIScreen.main.bounds.width-40) > 600 ? 600 :  UIScreen.main.bounds.width)
     var action:(CGFloat) ->()
-    var body: some View {
+    public var body: some View {
         VStack{
             ZStack(alignment: .leading){
                 Rectangle()

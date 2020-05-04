@@ -7,7 +7,7 @@
 //
 #if os(iOS)
 import SwiftUI
-struct MusicControlLarge: View {
+public struct MusicControlLarge: View {
     @Binding var nowPlaying:Song?
     @Binding var enabled:Bool
     @Binding var playing:Bool
@@ -17,7 +17,7 @@ struct MusicControlLarge: View {
     var onBackward:() ->()
     var onForward:() -> ()
     
-    init(playing:Binding<Bool>,nowPlaying:Binding<Song?>,enabled:Binding<Bool>,onPlayPause:@escaping(Bool) -> (),onForward:@escaping() -> (),onBackward:@escaping () -> ()){
+   public  init(playing:Binding<Bool>,nowPlaying:Binding<Song?>,enabled:Binding<Bool>,onPlayPause:@escaping(Bool) -> (),onForward:@escaping() -> (),onBackward:@escaping () -> ()){
         self._playing = playing
         self._nowPlaying = nowPlaying
         self._enabled = enabled
@@ -27,7 +27,7 @@ struct MusicControlLarge: View {
         self._current = .constant(0.0)
         self._total = .constant(0.0)
     }
-    init(playing:Binding<Bool>,nowPlaying:Binding<Song?>,current:Binding<CGFloat>,total:Binding<CGFloat>,enabled:Binding<Bool>,onPlayPause:@escaping(Bool) -> (),onForward:@escaping() -> (),onBackward:@escaping () -> ()){
+    public init(playing:Binding<Bool>,nowPlaying:Binding<Song?>,current:Binding<CGFloat>,total:Binding<CGFloat>,enabled:Binding<Bool>,onPlayPause:@escaping(Bool) -> (),onForward:@escaping() -> (),onBackward:@escaping () -> ()){
         self._playing = playing
         self._nowPlaying = nowPlaying
         self._enabled = enabled
@@ -37,7 +37,7 @@ struct MusicControlLarge: View {
         self._current = current
         self._total = total
     }
-    var body: some View {
+    public var body: some View {
         Group{
             if self.total != 0.0 {
                 MusikSlider(current: $current,total:$total,action:{ value in
@@ -77,21 +77,21 @@ struct MusicControlLarge: View {
         }.padding()
     }
 }
-struct MusicControlSmall: View{
+public struct MusicControlSmall: View{
     @Binding var nowPlaying:Song?
     @Binding var enabled:Bool
     @Binding var playing:Bool
     var onPlayPause:(Bool) -> ()
     var onForward:() -> ()
     
-    init(playing:Binding<Bool>,nowPlaying:Binding<Song?>,enabled:Binding<Bool>,onPlayPause:@escaping(Bool) -> (),onForward:@escaping() -> ()){
+    public init(playing:Binding<Bool>,nowPlaying:Binding<Song?>,enabled:Binding<Bool>,onPlayPause:@escaping(Bool) -> (),onForward:@escaping() -> ()){
         self._playing = playing
         self._nowPlaying = nowPlaying
         self._enabled = enabled
         self.onPlayPause = onPlayPause
         self.onForward = onForward
     }
-    var body: some View {
+    public var body: some View {
         Group{
             if (self.nowPlaying != nil){
                     VStack(alignment:.leading){

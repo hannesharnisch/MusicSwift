@@ -7,19 +7,19 @@
 //
 #if !os(macOS)
 import SwiftUI
-struct DraggableSmallRepresentationView<T:View,L:View,S:View>: View {
+public struct DraggableSmallRepresentationView<T:View,L:View,S:View>: View {
     var smallContent:T
     var largeContent:L
     var content:S
     @GestureState private var dragOffset = CGSize.zero
     @Binding var percentage:CGFloat
-    init(percentage:Binding<CGFloat>,smallContent:() -> T,largeContent:() -> L,content: () -> S){
+    public init(percentage:Binding<CGFloat>,smallContent:() -> T,largeContent:() -> L,content: () -> S){
         self.content = content()
         self.smallContent  = smallContent()
         self.largeContent  = largeContent()
         self._percentage   = percentage
     }
-    var body: some View {
+    public var body: some View {
         VStack(alignment: .center){
             Spacer()
             if self.percentage != 0{

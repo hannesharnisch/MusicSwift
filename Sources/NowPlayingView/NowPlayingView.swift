@@ -8,6 +8,7 @@
 #if os(iOS)
 import SwiftUI
 import Foundation
+import MusicSwift
 
 public struct NowPlayingInfoView<T:MusicPlayerActionEnabled>: View {
     @Binding var showMusikPlaying:CGFloat

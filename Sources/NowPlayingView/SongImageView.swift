@@ -7,7 +7,6 @@
 //
 #if os(iOS)
 import SwiftUI
-
 public struct SongImageView: View {
     @Binding var percentage:CGFloat
     var songImage:UIImage?
