@@ -10,6 +10,9 @@ let package = Package(
         .library(
             name: "MusicSwift",
             targets: ["MusicSwift"]),
+        .library(
+            name: "NowPlayingView",
+                 targets: ["NowPlayingView"])
     ],
     dependencies: [
         .package(name: "SwiftJWT", url: "https://github.com/IBM-Swift/Swift-JWT.git", from: "3.6.1")
@@ -20,6 +23,9 @@ let package = Package(
         .target(
             name: "MusicSwift",
             dependencies: ["SwiftJWT"]),
+        .target(
+            name: "NowPlayingView",
+            dependencies: []),
         .testTarget(
             name: "MusicSwiftTests",
             dependencies: ["MusicSwift"]),

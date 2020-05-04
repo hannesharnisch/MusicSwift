@@ -26,7 +26,7 @@ public struct NowPlayingInfoView<T:MusicPlayerActionEnabled>: View {
         self._enabled = enabled
         self._playing = playing
     }
-    var body: some View {
+    public var body: some View {
         GeometryReader{ geometry in
         VStack{
         Spacer()
