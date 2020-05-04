@@ -5,10 +5,9 @@
 //  Created by Hannes Harnisch on 28.03.20.
 //  Copyright © 2020 Hannes Harnisch. All rights reserved.
 //
-
+#if os(iOS)
 import SwiftUI
 
-#if os(iOS)
 public struct SongImageView: View {
     @Binding var percentage:CGFloat
     var songImage:UIImage?

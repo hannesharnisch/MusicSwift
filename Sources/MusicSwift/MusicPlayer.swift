@@ -4,11 +4,10 @@
 //
 //  Created by Hannes Harnisch on 04.05.20.
 //
-
+#if os(iOS)
 import Foundation
 import MediaPlayer
 
-#if os(iOS)
 public class MusicPlayer{
     private var musicPlayer = MPMusicPlayerController.systemMusicPlayer
     public var delegate:MusicPlayerDelegate?

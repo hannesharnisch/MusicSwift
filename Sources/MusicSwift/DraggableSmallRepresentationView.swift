@@ -5,9 +5,8 @@
 //  Created by Hannes Harnisch on 29.03.20.
 //  Copyright © 2020 Hannes Harnisch. All rights reserved.
 //
-
-import SwiftUI
 #if !os(macOS)
+import SwiftUI
 struct DraggableSmallRepresentationView<T:View,L:View,S:View>: View {
     var smallContent:T
     var largeContent:L

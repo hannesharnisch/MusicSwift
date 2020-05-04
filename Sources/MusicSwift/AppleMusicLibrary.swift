@@ -4,11 +4,10 @@
 //
 //  Created by Hannes Harnisch on 04.05.20.
 //
-
+#if os(iOS)
 import Foundation
 import StoreKit
 import MediaPlayer
-#if os(iOS)
 class AppleMusicLibrary{
     let developerToken:String
     var userToken:String?

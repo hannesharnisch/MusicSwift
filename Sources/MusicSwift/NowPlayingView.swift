@@ -5,11 +5,10 @@
 //  Created by Hannes Harnisch on 27.03.20.
 //  Copyright © 2020 Hannes Harnisch. All rights reserved.
 //
-
+#if os(iOS)
 import SwiftUI
 import Foundation
 
-#if os(iOS)
 public struct NowPlayingInfoView<T:MusicPlayerActionEnabled>: View {
     @Binding var showMusikPlaying:CGFloat
     var controller:T?

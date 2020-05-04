@@ -5,9 +5,9 @@
 //  Created by Hannes Harnisch on 28.03.20.
 //  Copyright © 2020 Hannes Harnisch. All rights reserved.
 //
-
-import SwiftUI
 #if os(iOS)
+import SwiftUI
+
 struct MusikSlider: View {
     @Binding var current:CGFloat
     @Binding var total:CGFloat

@@ -4,12 +4,12 @@
 //
 //  Created by Hannes Harnisch on 04.05.20.
 //
-
+#if os(iOS)
 import Foundation
 import SwiftJWT
 import MediaPlayer
 
-#if os(iOS)
+
 public class MusicFinder{
     let appleMusicLib:AppleMusicLibrary?
 
