@@ -88,7 +88,8 @@ public enum MusicPlayerAction{
 }
 
 public struct Blur: UIViewRepresentable {
-    var effect: UIVisualEffect = UIBlurEffect(style: .systemThinMaterial)
+    public var effect: UIVisualEffect = UIBlurEffect(style: .systemThinMaterial)
+    public init()
     public func makeUIView(context: UIViewRepresentableContext<Self>) -> UIVisualEffectView { UIVisualEffectView() }
     public func updateUIView(_ uiView: UIVisualEffectView, context: UIViewRepresentableContext<Self>) { uiView.effect = effect }
 }
