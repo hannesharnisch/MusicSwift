@@ -76,19 +76,6 @@ public struct NowPlayingInfoView<T:MusicPlayerActionEnabled>: View {
         }
     }
 }
-struct NowPlayingInfoView_Preview: PreviewProvider {
-    static var previews: some View {
-        TabView{
-            ZStack{
-                NavigationView{
-                    Text("Hallo")
-                    .navigationBarTitle(Text("TITLE"))
-                }
-                NowPlayingInfoView(showMusikPlaying: .constant(0),controller: WePartyModel(state: WePartyState()), nowPlaying: .constant(Song(title: "Halkld", interpret: "haldo")), current: .constant(5), total: .constant(40), enabled: .constant(true), playing: .constant(true))
-            }
-        }
-    }
-}
 public protocol MusicPlayerActionEnabled {
     func toggleAction(action:MusicPlayerAction)
     func changedStateTo(large:Bool)
@@ -102,7 +89,7 @@ public enum MusicPlayerAction{
 
 public struct Blur: UIViewRepresentable {
     var effect: UIVisualEffect = UIBlurEffect(style: .systemThinMaterial)
-    func makeUIView(context: UIViewRepresentableContext<Self>) -> UIVisualEffectView { UIVisualEffectView() }
-    func updateUIView(_ uiView: UIVisualEffectView, context: UIViewRepresentableContext<Self>) { uiView.effect = effect }
+    public func makeUIView(context: UIViewRepresentableContext<Self>) -> UIVisualEffectView { UIVisualEffectView() }
+    public func updateUIView(_ uiView: UIVisualEffectView, context: UIViewRepresentableContext<Self>) { uiView.effect = effect }
 }
 #endif

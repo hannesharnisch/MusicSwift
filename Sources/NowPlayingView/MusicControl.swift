@@ -7,6 +7,8 @@
 //
 #if os(iOS)
 import SwiftUI
+import MusicSwift
+
 public struct MusicControlLarge: View {
     @Binding var nowPlaying:Song?
     @Binding var enabled:Bool
