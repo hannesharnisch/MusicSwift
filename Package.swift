@@ -25,7 +25,7 @@ let package = Package(
             dependencies: ["SwiftJWT"]),
         .target(
             name: "NowPlayingView",
-            dependencies: []),
+            dependencies: ["MusicSwift"]),
         .testTarget(
             name: "MusicSwiftTests",
             dependencies: ["MusicSwift"]),
