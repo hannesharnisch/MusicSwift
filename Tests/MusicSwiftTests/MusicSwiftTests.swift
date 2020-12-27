@@ -1,6 +1,6 @@
 import XCTest
 @testable import MusicSwift
-@testable import NowPlayingView
+//@testable import NowPlayingView
 
 final class MusicSwiftTests: XCTestCase {
     func testExample() {

@@ -18,7 +18,7 @@ class AppleMusicLibrary{
         self.controller = SKCloudServiceController()
         self.urls = AppleMusicURLs(controller: controller)
         controller.requestUserToken(forDeveloperToken: developerToken) { (token, error) in
-            print("ERROR REQUEST TOKEN: \(error.debugDescription)" ?? "TOKEN READY")
+            print("ERROR REQUEST TOKEN: \(error.debugDescription)" )
             guard error == nil && token != nil else{
                 return
             }
@@ -26,7 +26,7 @@ class AppleMusicLibrary{
         }
     }
     func resolveSongsRequest(data:Data) -> [Song]?{
-        print(String(data:data,encoding:.utf8))
+        print(String(data:data,encoding:.utf8)!)
         
         do{
             guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: [String:[String:AnyObject]]] else{
