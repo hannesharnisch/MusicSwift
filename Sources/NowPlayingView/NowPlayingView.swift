@@ -11,23 +11,13 @@ import MusicSwift
 @available(iOS 14.0, *)
 public struct NowPlayingView: View {
     @Namespace private var animation
-    private var controller:MusicPlayerActionEnabled
-    @Binding private var offset:CGFloat
-    @Binding private var playing:Bool
-    @Binding private var song:Song?
+    @ObservedObject private var controller:MusicPlayerActionController
     @State private var expanded = false
     @State private var gestureOffset:CGFloat = 0.0
     private var safeArea = UIApplication.shared.windows.first?.safeAreaInsets
     private var height = min(UIScreen.main.bounds.height * 0.8 , UIScreen.main.bounds.width * 0.8)
-    public init(controller:MusicPlayerActionEnabled,nowPlaying:Binding<Song?>, playing:Binding<Bool>){
-        self.init(controller: controller, nowPlaying: nowPlaying, playing: playing, offset: .constant(0.0))
-    }
-    public init(controller:MusicPlayerActionEnabled,nowPlaying:Binding<Song?>, playing:Binding<Bool>,offset:Binding<CGFloat>){
+    public init(controller:MusicPlayerActionController = MusicPlayerActionController()) {
         self.controller = controller
-        self._offset = offset
-        self._playing = playing
-        self._song = nowPlaying
-        
     }
     public var body: some View {
         VStack{
@@ -40,31 +30,15 @@ public struct NowPlayingView: View {
                     }
             }
             HStack(spacing: 15){
-                if song?.getImage() != nil {
-                    Image(uiImage: song!.getImage()!).resizable().aspectRatio(contentMode: .fill)
-                    .frame(width: expanded ? height : 55, height: expanded ? height : 55)
-                    .cornerRadius(15)
+                if self.controller.song?.getImage() != nil {
+                    Image(uiImage: self.controller.song!.getImage()!).resizable().aspectRatio(contentMode: .fill)
+                        .clipShape(RoundedRectangle(cornerRadius: expanded ? 15 : 5)).frame(width: expanded ? height : 55, height: expanded ? height : 55)
                 } else {
                     Image(systemName: "music.note").resizable().aspectRatio(contentMode: .fit)
-                        .frame(width: expanded ? height : 55, height: expanded ? height : 55)
-                        .cornerRadius(15)
+                        .clipShape(RoundedRectangle(cornerRadius: expanded ? 15 : 5)).frame(width: expanded ? height : 55, height: expanded ? height : 55)
                 }
                 if !expanded {
-                    VStack(alignment: .leading){
-                        Text(song != nil ? song!.title:"Not Playing").font(.callout).fontWeight(.bold)
-                        Text(song != nil ? song!.interpret : "").font(.callout)
-                    }.matchedGeometryEffect(id: "titleAndArtist", in: animation)
-                    Spacer()
-                    Button(action: {
-                        
-                    }, label: {
-                        Image(systemName: self.playing ? "pause.fill" : "play.fill").font(.headline).foregroundColor(.primary)
-                    })
-                    Button(action: {
-                        
-                    }, label: {
-                        Image(systemName: "forward.fill").font(.headline).foregroundColor(.primary)
-                    })
+                    self.smallView
                 }
             }
             if expanded { Spacer() }
@@ -72,31 +46,13 @@ public struct NowPlayingView: View {
                 HStack{
                     if expanded {
                         VStack(alignment: .leading){
-                            Text(song != nil ? song!.title:"Not Playing").font(.callout).fontWeight(.bold)
-                            Text(song != nil ? song!.interpret : "").font(.callout)
+                            Text(self.controller.song != nil ? self.controller.song!.title:"Not Playing").font(.callout).fontWeight(.bold)
+                            Text(self.controller.song != nil ? self.controller.song!.interpret : "").font(.callout)
                         }.matchedGeometryEffect(id: "titleAndArtist", in: animation)
                     }
                 }.padding()
                 if expanded{
-                    HStack{
-                        Button(action: {
-                            
-                        }, label: {
-                            Image(systemName: "backward.fill").font(.title).foregroundColor(.primary)
-                        })
-                        Spacer()
-                        Button(action: {
-                            
-                        }, label: {
-                            Image(systemName: self.playing ? "pause.fill" : "play.fill").font(.largeTitle).foregroundColor(.primary)
-                        })
-                        Spacer()
-                        Button(action: {
-                            
-                        }, label: {
-                            Image(systemName: "forward.fill").font(.title).foregroundColor(.primary)
-                        })
-                    }.padding()
+                    self.largeControls
                 }
             }.frame(height: expanded ? nil : 0).opacity(expanded ? 1 : 0)
             if expanded { Spacer() }
@@ -104,7 +60,53 @@ public struct NowPlayingView: View {
             withAnimation(.spring()) {
                 self.expanded.toggle()
             }
-        }.background(BlurView()).cornerRadius(expanded ? 30 : 0).offset(y: expanded ? 0 : offset).offset(y: gestureOffset).gesture(DragGesture().onEnded(onEnded(value:)).onChanged(onChanged(value:))).ignoresSafeArea()
+        }.background(BlurView().gesture(DragGesture().onEnded(onEnded(value:)).onChanged(onChanged(value:))).onTapGesture {
+            if !self.expanded {
+                withAnimation(.spring()) {
+                    self.expanded.toggle()
+                }
+            }
+        }).cornerRadius(expanded ? 30 : 0).offset(y: self.expanded ? 0 : self.controller.offset).offset(y: gestureOffset).gesture(DragGesture().onEnded(onEnded(value:)).onChanged(onChanged(value:))).ignoresSafeArea()
+    }
+    var smallView: some View {
+        HStack{
+            VStack(alignment: .leading){
+                Text(self.controller.song != nil ? self.controller.song!.title:"Not Playing").font(.callout).fontWeight(.bold)
+                Text(self.controller.song != nil ? self.controller.song!.interpret : "").font(.callout)
+            }.matchedGeometryEffect(id: "titleAndArtist", in: animation)
+            Spacer()
+            Button(action: {
+                self.controller.toggleAction(action: self.controller.playing ?  .pause : .play)
+            }, label: {
+                Image(systemName: self.controller.playing ? "pause.fill" : "play.fill").font(.title).foregroundColor(.primary)
+            })
+            Button(action: {
+                self.controller.toggleAction(action: .next)
+            }, label: {
+                Image(systemName: "forward.fill").font(.headline).foregroundColor(.primary)
+            })
+        }
+    }
+    var largeControls: some View {
+        HStack{
+            Button(action: {
+                self.controller.toggleAction(action: .previous)
+            }, label: {
+                Image(systemName: "backward.fill").font(.title).foregroundColor(.primary)
+            })
+            Spacer()
+            Button(action: {
+                self.controller.toggleAction(action: self.controller.playing ?  .pause : .play)
+            }, label: {
+                Image(systemName: self.controller.playing ? "pause.fill" : "play.fill").font(.largeTitle).foregroundColor(.primary)
+            })
+            Spacer()
+            Button(action: {
+                self.controller.toggleAction(action: .next)
+            }, label: {
+                Image(systemName: "forward.fill").font(.title).foregroundColor(.primary)
+            })
+        }.padding()
     }
     private func onChanged(value:DragGesture.Value){
         if value.translation.height > 0 && expanded {
@@ -126,8 +128,20 @@ public struct NowPlayingView: View {
         case large,small
     }
 }
+
 @available(iOS 14.0, *)
-public protocol MusicPlayerActionEnabled{
-    func toggleAction(action:NowPlayingView.Action)
-    func changeStateTo(state:NowPlayingView.Condition)
+struct NowPlayingView_Previews: PreviewProvider {
+    static var previews: some View {
+        ZStack(alignment:.bottom) {
+            NavigationView{
+                VStack{
+                    Spacer()
+                    Text("HI")
+                    Spacer()
+                }.navigationBarTitle("NowPlayingView")
+            }.navigationViewStyle(StackNavigationViewStyle())
+            NowPlayingView()
+        }.edgesIgnoringSafeArea(.bottom)
+    }
 }
+
