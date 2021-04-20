@@ -19,8 +19,8 @@ public class MusicPlayer{
     }
     private var queue:[Song]!
     private var indexNowPlayingItem:Int?
-    
-    public init(){
+    public static let shared = MusicPlayer()
+    init(){
         musicPlayer.beginGeneratingPlaybackNotifications()
         NotificationCenter.default.addObserver(self, selector: #selector(self.sendNowPlayingChange(_:)), name: .MPMusicPlayerControllerNowPlayingItemDidChange, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.sendChangedQueue(_:)), name: .MPMusicPlayerControllerQueueDidChange, object: nil)
