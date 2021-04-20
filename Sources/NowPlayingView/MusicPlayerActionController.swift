@@ -20,7 +20,7 @@ public class MusicPlayerActionController: ObservableObject {
     @Published var offset:CGFloat = 0.0
     @Published var playing:Bool = false
     @Published var song:Song? = nil
-    let musicPlayer = MusicPlayer()
+    let musicPlayer = MusicPlayer.shared
     public init(){
         musicPlayer.delegate = self
     }
