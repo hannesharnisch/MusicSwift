@@ -16,7 +16,6 @@ public struct NowPlayingView: View {
     @State private var showsQueue = false
     @State private var gestureOffset:CGFloat = 0.0
     @State private var offset:CGFloat = 0.0
-    @State private var showAirplay = false
     private var safeArea = UIApplication.shared.windows.first?.safeAreaInsets
     private var height = UIScreen.main.bounds.height < UIScreen.main.bounds.width ? UIScreen.main.bounds.height*0.5 : UIScreen.main.bounds.width*0.8
     public init(controller:MusicPlayingController = MusicPlayer.shared) {
@@ -36,9 +35,6 @@ public struct NowPlayingView: View {
                 QueueView(controller:controller)
             }else {
                 self.nowPlaying
-            }
-            if self.showAirplay {
-                MPVolumeViewRepresentable()
             }
             if expanded {
                 bottomControls
@@ -124,14 +120,10 @@ public struct NowPlayingView: View {
     }
     var bottomControls: some View {
         HStack {
-            Button(action: {
-                self.showAirplay.toggle()
-            }, label: {
                 VStack{
-                    Image(systemName: "airplayaudio").font(.title).foregroundColor(.primary)
+                    MPVolumeViewRepresentable().font(.title).foregroundColor(.primary)
                     Text("airplay").foregroundColor(.primary)
                 }
-            })
             Spacer()
             Button(action: {
                 self.showsQueue.toggle()
