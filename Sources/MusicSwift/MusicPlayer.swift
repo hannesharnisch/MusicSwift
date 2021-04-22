@@ -196,6 +196,7 @@ public class MusicPlayingController: ObservableObject {
     @Published public var playBackState:MPMusicPlaybackState = .paused
     @Published public var queue:[MPMediaItem] = []
     @Published public var currentPlaybackTime:Double? = nil
+    public init() {}
     public enum Action{
         case play,pause,next,previous
     }

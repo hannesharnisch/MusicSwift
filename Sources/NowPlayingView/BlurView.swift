@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  BlurView.swift
 //  
 //
 //  Created by Hannes Harnisch on 27.12.20.
