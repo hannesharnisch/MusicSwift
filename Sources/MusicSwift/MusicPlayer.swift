@@ -7,181 +7,91 @@
 #if os(iOS)
 import Foundation
 import MediaPlayer
+import Combine
 
-public class MusicPlayer{
+
+public final class MusicPlayer: MusicPlayingController {
+    public static let shared = MusicPlayer()
     private var musicPlayer = MPMusicPlayerController.systemMusicPlayer
-    public var delegate:MusicPlayerDelegate?
-    private var currentPlaybackTime:Double?
-    var playHeadTimer:Timer? = nil {
+    private var playHeadTimer:Timer? = nil {
         willSet {
             playHeadTimer?.invalidate()
         }
     }
-    private var queue:[Song]!
-    private var indexNowPlayingItem:Int?
-    public static let shared = MusicPlayer()
-    init(){
+    override init() {
+        super.init()
         musicPlayer.beginGeneratingPlaybackNotifications()
+        self.nowPlayingItem = self.musicPlayer.nowPlayingItem
+        self.playBackState = self.musicPlayer.playbackState
+        if self.musicPlayer.nowPlayingItem?.playbackDuration != nil {
+            self.currentPlaybackTime = self.musicPlayer.currentPlaybackTime/(self.musicPlayer.nowPlayingItem!.playbackDuration)
+        }
+        self.queue = []
         NotificationCenter.default.addObserver(self, selector: #selector(self.sendNowPlayingChange(_:)), name: .MPMusicPlayerControllerNowPlayingItemDidChange, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.sendChangedQueue(_:)), name: .MPMusicPlayerControllerQueueDidChange, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.sendPlaybackState(_:)), name: .MPMusicPlayerControllerPlaybackStateDidChange, object: nil)
         musicPlayer.repeatMode = .all
         musicPlayer.shuffleMode = .off
     }
+    @objc private func sendNowPlayingChange(_ notification: Notification){
+        self.nowPlayingItem = self.musicPlayer.nowPlayingItem
+    }
+    @objc private func sendChangedQueue(_ notification: Notification){
+        if self.updateQueue() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                _ = self.updateQueue()
+            }
+        }
+    }
+    @objc private func sendPlaybackState(_ notification: Notification){
+        self.playBackState = self.musicPlayer.playbackState
+    }
+    override public func toggleAction(action: MusicPlayingController.Action) {
+        switch action{
+        case .next:
+            self.musicPlayer.skipToNextItem()
+        case .previous:
+            self.musicPlayer.skipToPreviousItem()
+        case .play:
+            self.musicPlayer.prepareToPlay()
+            self.musicPlayer.play()
+        case .pause:
+            self.musicPlayer.pause()
+        }
+    }
+}
+extension MusicPlayer {
     public func subscribeToPlayHead(){
-        playHeadTimer = Timer.scheduledTimer(timeInterval: 0.8, target: self, selector: #selector(self.playHeadChangeTimer), userInfo: nil, repeats: true)
+        playHeadTimer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(self.playHeadChangeTimer), userInfo: nil, repeats: true)
     }
     public func cancelPlayHeadSubscription(){
         playHeadTimer?.invalidate()
         playHeadTimer = nil
     }
     @objc func playHeadChangeTimer(){
-        if Double(musicPlayer.currentPlaybackTime) != self.currentPlaybackTime || self.currentPlaybackTime == nil {
-            self.currentPlaybackTime = Double(musicPlayer.currentPlaybackTime)
-            if self.delegate != nil{
-                delegate?.playHeadPositionChanged(current: Double(musicPlayer.currentPlaybackTime), total: Double(musicPlayer.nowPlayingItem?.playbackDuration ?? 0))
+        if Double(musicPlayer.currentPlaybackTime)/(self.musicPlayer.nowPlayingItem?.playbackDuration ?? 1) != self.currentPlaybackTime || self.currentPlaybackTime == nil {
+            if self.musicPlayer.nowPlayingItem?.playbackDuration != nil {
+                self.currentPlaybackTime = Double(musicPlayer.currentPlaybackTime)/(self.musicPlayer.nowPlayingItem!.playbackDuration)
+            }else{
+                self.currentPlaybackTime = nil
             }
+            
         }
     }
-    public func setSongs(queue:MPMediaItemCollection){
-        musicPlayer.setQueue(with: queue)
-        self.queue = []
-        for item in queue.items{
-            self.queue.append(Song(song: item)!)
-        }
-        musicPlayer.prepareToPlay()
-    }
-    public func setSongs(queue:[Song]){
-        var ids = [String]()
-        for song in queue{
-            if song.appleMusicSongID != nil{
-                ids.append(song.appleMusicSongID!)
-            }
+}
+
+extension MusicPlayer{
+    private func updateQueue() -> Bool {
+        guard let queue = self.getCurrentQueue() else{
+            return false
         }
         self.queue = queue
-        musicPlayer.setQueue(with: MPMusicPlayerStoreQueueDescriptor(storeIDs: ids))
-        print("SET SONGS")
-        musicPlayer.prepareToPlay()
+        return true
     }
-    public func addSongsToQueue(songs: MPMediaItemCollection){
-        let descriptor = MPMusicPlayerMediaItemQueueDescriptor(itemCollection: songs)
-        musicPlayer.append(descriptor)
-        var songsson = [Song]()
-        for song in songs.items{
-            songsson.append(Song(song: song)!)
-        }
-        self.delegate?.queueDidChange(queue: songsson, type: .songsAppended(afterIndex: ((queue.count-1) - (indexNowPlayingItem ?? 0))))
-        self.queue.append(contentsOf: songsson)
-    }
-    public func addSongsToQueue(songs:[Song]){
-        var ids = [String]()
-        for song in songs{
-            ids.append(song.appleMusicSongID!)
-        }
-        let descriptor = MPMusicPlayerStoreQueueDescriptor(storeIDs: ids)
-        musicPlayer.append(descriptor)
-        self.delegate?.queueDidChange(queue: songs, type: .songsAppended(afterIndex: ((queue.count-1) - (indexNowPlayingItem ?? 0))))
-        self.queue.append(contentsOf: songs)
-    }
-    public func prependSongsToQueue(songs: MPMediaItemCollection){
-        let descriptor = MPMusicPlayerMediaItemQueueDescriptor(itemCollection: songs)
-        musicPlayer.prepend(descriptor)
-        var songsson = [Song]()
-        for song in songs.items{
-            songsson.append(Song(song: song)!)
-        }
-        self.queue = insertAtNowPlayingItem(queue: queue, songs: songsson)
-        self.delegate?.queueDidChange(queue: songsson, type: .songsPrepended)
-    }
-    public func prependSongsToQueue(songs:[Song]){
-        self.queue = insertAtNowPlayingItem(queue: queue, songs: songs)
-        musicPlayer.prepend(self.queueDescriptorFrom(songs: songs))
-        self.delegate?.queueDidChange(queue: songs, type: .songsPrepended)
-    }
-    private func insertAtNowPlayingItem(queue:[Song],songs:[Song])->[Song]{
+    public func getCurrentQueue() -> [MPMediaItem]?{
+        let items = self.queue
         let index = musicPlayer.indexOfNowPlayingItem
-        var newQueue = [Song]()
-        for i in (0...index){
-            newQueue.append(queue[i])
-        }
-        newQueue.append(contentsOf: songs)
-        if index != queue.count{
-            for a in (index + 1)..<queue.count{
-                newQueue.append(queue[a])
-            }
-        }
-        return newQueue
-    }
-    public func removeSongFromQueue(song:Song){
-        print("REMOVing \(song.title)")
-        guard var queue = getCurrentQueue() else{
-            print("ERROR loading QUEUE")
-            return
-        }
-        let element = queue.removeLast()
-        queue.insert(element, at: 0)
-        queue.removeAll { (song1) -> Bool in
-            return song1 == song
-        }
-        let state = musicPlayer.playbackState
-        let playbackTime = musicPlayer.currentPlaybackTime
-        let isNowPlayingBeeingDeleted = Song(song: musicPlayer.nowPlayingItem!) == song
-        self.queue = queue
-        musicPlayer.prepareToPlay()
-        musicPlayer.setQueue(with: self.queueDescriptorFrom(songs: queue))
-        //musicPlayer.prepareToPlay()
-        if state == .playing{
-            musicPlayer.play()
-        }
-        if !isNowPlayingBeeingDeleted{
-            setNowPlayingPosition(position: playbackTime)
-        }
-    }
-    public func setNowPlayingPosition(position:TimeInterval){
-        guard musicPlayer.nowPlayingItem?.playbackDuration ?? 0.0 > position else{
-            return
-        }
-        musicPlayer.currentPlaybackTime = position
-    }
-    public func queueDescriptorFrom(songs:[Song])->MPMusicPlayerStoreQueueDescriptor{
-        var ids = [String]()
-        for song in songs{
-            ids.append(song.appleMusicSongID!)
-        }
-        return MPMusicPlayerStoreQueueDescriptor(storeIDs: ids)
-    }
-    @objc private func sendNowPlayingChange(_ notification: Notification){
-        print("SENDing NOW")
-        let index = musicPlayer.indexOfNowPlayingItem
-        if delegate != nil {
-            if indexNowPlayingItem != nil && (indexNowPlayingItem ?? 0 < queue?.count ?? 0 + 10){
-            if index == (indexNowPlayingItem! - 1){
-                self.delegate!.queueDidChange(queue: self.getCurrentQueue()!, type: .previousSong)
-            } else if index == (indexNowPlayingItem! + 1){
-                self.delegate!.queueDidChange(queue: self.getCurrentQueue()!, type: .nextSong)
-            } else{
-                let queue = self.getCurrentQueue()
-                if queue != nil{
-                    self.delegate!.queueDidChange(queue: queue!,type: .complete)
-                }else{
-                    DispatchQueue.main.asyncAfter(wallDeadline: .now() + 2) {
-                        guard let queue = self.getCurrentQueue() else{
-                            return
-                        }
-                        self.delegate!.queueDidChange(queue: queue,type: .complete)
-                    }
-                }
-            }
-        }
-            self.playHeadChangeTimer()
-            self.indexNowPlayingItem = index
-            self.delegate!.nowPlayingChanged(nowPlaying: musicPlayer.nowPlayingItem)
-        }
-    }
-    public func getCurrentQueue() -> [Song]?{
-        let items = queue!
-        let index = musicPlayer.indexOfNowPlayingItem
-        var queue = [Song]()
+        var queue = [MPMediaItem]()
         if items.count == 1{
             queue.append(items[0])
         }else if index >= items.count{
@@ -198,54 +108,99 @@ public class MusicPlayer{
         }
         return queue
     }
-    @objc private func sendChangedQueue(_ notification: Notification){
-        print("SENDing QUEUE")
-        let queue = self.getCurrentQueue()
-        if delegate != nil && queue != nil{
-            if queue != nil{
-                self.delegate!.queueDidChange(queue: queue!,type: .complete)
-            }else{
-                DispatchQueue.main.asyncAfter(wallDeadline: .now() + 2) {
-                    guard let queue = self.getCurrentQueue() else{
-                        return
-                    }
-                    self.delegate!.queueDidChange(queue: queue,type: .complete)
-                }
+}
+
+extension MusicPlayer {
+    public func setSongs(queue:MPMediaItemCollection){
+        musicPlayer.setQueue(with: queue)
+        self.queue =  queue.items
+        musicPlayer.prepareToPlay()
+    }
+    public func setSongs(queue:[MPMediaItem]){
+        self.setSongs(queue: MPMediaItemCollection(items: queue))
+    }
+    public func addSongsToQueue(songs: MPMediaItemCollection){
+        let descriptor = MPMusicPlayerMediaItemQueueDescriptor(itemCollection: songs)
+        musicPlayer.append(descriptor)
+        var newQueue = self.queue
+        newQueue.append(contentsOf: songs.items)
+        self.queue = newQueue
+    }
+    public func addSongsToQueue(songs:[MPMediaItem]){
+        self.addSongsToQueue(songs: MPMediaItemCollection(items: songs))
+    }
+    public func prependSongsToQueue(songs: MPMediaItemCollection){
+        let descriptor = MPMusicPlayerMediaItemQueueDescriptor(itemCollection: songs)
+        musicPlayer.prepend(descriptor)
+        self.queue = self.insertAtNowPlayingItem(queue: self.queue, songs: songs.items)
+    }
+    public func prependSongsToQueue(songs:[MPMediaItem]){
+        self.prependSongsToQueue(songs: MPMediaItemCollection(items: songs))
+    }
+    private func insertAtNowPlayingItem(queue:[MPMediaItem],songs:[MPMediaItem]) -> [MPMediaItem]{
+        let index = musicPlayer.indexOfNowPlayingItem
+        var newQueue = [MPMediaItem]()
+        for i in (0...index){
+            newQueue.append(queue[i])
+        }
+        newQueue.append(contentsOf: songs)
+        if index != queue.count{
+            for a in (index + 1)..<queue.count{
+                newQueue.append(queue[a])
             }
         }
+        return newQueue
     }
-    @objc private func sendPlaybackState(_ notification: Notification){
-        print("SENDing STATE")
-        if delegate != nil {
-            self.delegate!.playingStateChanged(state: musicPlayer.playbackState)
+    public func removeSongFromQueue(song:MPMediaItem){
+        print("REMOVing \(song.title)")
+        guard var queue = getCurrentQueue() else{
+            print("ERROR loading QUEUE")
+            return
+        }
+        let element = queue.removeLast()
+        queue.insert(element, at: 0)
+        queue.removeAll { (song1) -> Bool in
+            return song1.playbackStoreID == song.playbackStoreID
+        }
+        let state = musicPlayer.playbackState
+        let playbackTime = musicPlayer.currentPlaybackTime
+        let isNowPlayingBeeingDeleted = musicPlayer.nowPlayingItem!.playbackStoreID == song.playbackStoreID
+        self.queue = queue
+        musicPlayer.prepareToPlay()
+        musicPlayer.setQueue(with: self.queueDescriptorFrom(songs: queue))
+        musicPlayer.prepareToPlay()
+        if state == .playing{
+            musicPlayer.play()
+        }
+        if !isNowPlayingBeeingDeleted{
+            setNowPlayingPosition(position: playbackTime)
         }
     }
-    
-    public func play(){
-        self.sendPlaybackState(Notification(name: .MPMusicPlayerControllerPlaybackStateDidChange))
-        musicPlayer.play()
+    public func setNowPlayingPosition(position:TimeInterval){
+        guard musicPlayer.nowPlayingItem?.playbackDuration ?? 0.0 > position else{
+            return
+        }
+        musicPlayer.currentPlaybackTime = position
     }
-    public func pause(){
-        musicPlayer.pause()
-    }
-    public func foreward(){
-        musicPlayer.skipToNextItem()
-    }
-    public func backward(){
-        musicPlayer.skipToPreviousItem()
+    public func queueDescriptorFrom(songs:[MPMediaItem]) -> MPMusicPlayerStoreQueueDescriptor{
+        var ids = [String]()
+        for song in songs{
+            ids.append(song.playbackStoreID)
+        }
+        return MPMusicPlayerStoreQueueDescriptor(storeIDs: ids)
     }
 }
-public protocol MusicPlayerDelegate {
-    func nowPlayingChanged(nowPlaying:MPMediaItem?)
-    func queueDidChange(queue:[Song],type:QueueChangeType)
-    func playingStateChanged(state: MPMusicPlaybackState)
-    func playHeadPositionChanged(current:Double,total:Double)
-}
-public enum QueueChangeType{
-    case complete
-    case nextSong
-    case previousSong
-    case songsPrepended
-    case songsAppended(afterIndex:Int)
+
+public class MusicPlayingController: ObservableObject {
+    @Published public var nowPlayingItem:MPMediaItem? = nil
+    @Published public var playBackState:MPMusicPlaybackState = .paused
+    @Published public var queue:[MPMediaItem] = []
+    @Published public var currentPlaybackTime:Double? = nil
+    public enum Action{
+        case play,pause,next,previous
+    }
+    public func toggleAction(action:MusicPlayingController.Action) {
+        fatalError("Please override toggleAction")
+    }
 }
 #endif

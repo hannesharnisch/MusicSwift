@@ -27,7 +27,6 @@ class AppleMusicLibrary{
     }
     func resolveSongsRequest(data:Data) -> [Song]?{
         print(String(data:data,encoding:.utf8)!)
-        
         do{
             guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: [String:[String:AnyObject]]] else{
                 return nil
@@ -83,7 +82,7 @@ class AppleMusicLibrary{
             urlRequest.setValue(userToken, forHTTPHeaderField: "Music-User-Token")
             print("USER TOKEN ENAbled")
         }
-        _ = session.dataTask(with: urlRequest, completionHandler: { (data, response, error) in
+        session.dataTask(with: urlRequest, completionHandler: { (data, response, error) in
             print("RESPONSE")
             guard error == nil else{
                 callback(.failure(.noFound))

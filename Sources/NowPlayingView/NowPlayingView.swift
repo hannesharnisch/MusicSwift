@@ -11,12 +11,13 @@ import MusicSwift
 @available(iOS 14.0, *)
 public struct NowPlayingView: View {
     @Namespace private var animation
-    @ObservedObject private var controller:MusicPlayerActionController
+    @ObservedObject private var controller:MusicPlayingController
     @State private var expanded = false
     @State private var gestureOffset:CGFloat = 0.0
+    @State private var offset:CGFloat = 0.0
     private var safeArea = UIApplication.shared.windows.first?.safeAreaInsets
     private var height = min(UIScreen.main.bounds.height * 0.8 , UIScreen.main.bounds.width * 0.8)
-    public init(controller:MusicPlayerActionController = MusicPlayerActionController()) {
+    public init(controller:MusicPlayingController = MusicPlayer.shared) {
         self.controller = controller
     }
     public var body: some View {
@@ -30,8 +31,8 @@ public struct NowPlayingView: View {
                     }
             }
             HStack(spacing: 15){
-                if self.controller.song?.getImage() != nil {
-                    Image(uiImage: self.controller.song!.getImage()!).resizable().aspectRatio(contentMode: .fill)
+                if self.controller.nowPlayingItem?.artwork?.image(at: CGSize(width: 1,height: 1)) != nil {
+                    Image(uiImage: (self.controller.nowPlayingItem?.artwork?.image(at: CGSize(width: 80,height: 80))!)!).resizable().aspectRatio(contentMode: .fill)
                         .clipShape(RoundedRectangle(cornerRadius: expanded ? 15 : 5)).frame(width: expanded ? height : 55, height: expanded ? height : 55)
                 } else {
                     Image(systemName: "music.note").resizable().aspectRatio(contentMode: .fit)
@@ -46,8 +47,8 @@ public struct NowPlayingView: View {
                 HStack{
                     if expanded {
                         VStack(alignment: .leading){
-                            Text(self.controller.song != nil ? self.controller.song!.title:"Not Playing").font(.callout).fontWeight(.bold)
-                            Text(self.controller.song != nil ? self.controller.song!.interpret : "").font(.callout)
+                            Text(self.controller.nowPlayingItem != nil ? self.controller.nowPlayingItem!.title ?? "No Title" : "Not Playing").font(.callout).fontWeight(.bold)
+                            Text(self.controller.nowPlayingItem != nil ? self.controller.nowPlayingItem!.artist ?? "-" : "").font(.callout)
                         }.matchedGeometryEffect(id: "titleAndArtist", in: animation)
                     }
                 }.padding()
@@ -66,24 +67,24 @@ public struct NowPlayingView: View {
                     self.expanded.toggle()
                 }
             }
-        }).cornerRadius(expanded ? 30 : 0).offset(y: self.expanded ? 0 : self.controller.offset).offset(y: gestureOffset).gesture(DragGesture().onEnded(onEnded(value:)).onChanged(onChanged(value:))).ignoresSafeArea()
+        }).cornerRadius(expanded ? 30 : 0).offset(y: self.expanded ? 0 : self.offset).offset(y: gestureOffset).gesture(DragGesture().onEnded(onEnded(value:)).onChanged(onChanged(value:))).ignoresSafeArea()
     }
     var smallView: some View {
         HStack{
             VStack(alignment: .leading){
-                Text(self.controller.song != nil ? self.controller.song!.title:"Not Playing").font(.callout).fontWeight(.bold)
-                Text(self.controller.song != nil ? self.controller.song!.interpret : "").font(.callout)
+                Text(self.controller.nowPlayingItem != nil ? self.controller.nowPlayingItem!.title ?? "No Title" : "Not Playing").font(.callout).fontWeight(.bold)
+                Text(self.controller.nowPlayingItem != nil ? self.controller.nowPlayingItem!.artist ?? "-" : "").font(.callout)
             }.matchedGeometryEffect(id: "titleAndArtist", in: animation)
             Spacer()
             Button(action: {
-                self.controller.toggleAction(action: self.controller.playing ?  .pause : .play)
+                self.controller.toggleAction(action: (self.controller.playBackState == .playing) ?  .pause : .play)
             }, label: {
-                Image(systemName: self.controller.playing ? "pause.fill" : "play.fill").font(.title).foregroundColor(.primary)
+                Image(systemName: (self.controller.playBackState == .playing) ? "pause.fill" : "play.fill").font(.title).foregroundColor(.primary).padding(.vertical).padding(.leading)
             })
             Button(action: {
                 self.controller.toggleAction(action: .next)
             }, label: {
-                Image(systemName: "forward.fill").font(.headline).foregroundColor(.primary)
+                Image(systemName: "forward.fill").font(.headline).foregroundColor(.primary).padding(.vertical).padding(.trailing)
             })
         }
     }
@@ -96,9 +97,9 @@ public struct NowPlayingView: View {
             })
             Spacer()
             Button(action: {
-                self.controller.toggleAction(action: self.controller.playing ?  .pause : .play)
+                self.controller.toggleAction(action: (self.controller.playBackState == .playing) ?  .pause : .play)
             }, label: {
-                Image(systemName: self.controller.playing ? "pause.fill" : "play.fill").font(.largeTitle).foregroundColor(.primary)
+                Image(systemName: (self.controller.playBackState == .playing) ? "pause.fill" : "play.fill").font(.largeTitle).foregroundColor(.primary)
             })
             Spacer()
             Button(action: {
@@ -120,9 +121,6 @@ public struct NowPlayingView: View {
             }
             self.gestureOffset = 0
         }
-    }
-    public enum Action{
-        case play,pause,next,previous
     }
     public enum Condition{
         case large,small
