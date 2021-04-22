@@ -8,15 +8,18 @@
 
 import SwiftUI
 import MediaPlayer
+import AVKit
 import UIKit
 
 struct MPVolumeViewRepresentable: UIViewRepresentable {
-    func makeUIView(context: Context) -> MPVolumeView {
-        let view = MPVolumeView(frame: .zero)
-        view.showsVolumeSlider = false
+    func makeUIView(context: Context) -> AVRoutePickerView {
+        let view = AVRoutePickerView(frame: .zero)
+        view.tintColor = UIColor.darkText
+        view.activeTintColor = .white
+        view.prioritizesVideoDevices = true
         return view
     }
-    func updateUIView(_ uiView: MPVolumeView, context: Context) {
+    func updateUIView(_ uiView: AVRoutePickerView, context: Context) {
         
     }
 }

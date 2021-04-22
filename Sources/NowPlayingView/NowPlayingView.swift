@@ -41,7 +41,7 @@ public struct NowPlayingView: View {
             }
         }.padding(.horizontal).frame(maxHeight: expanded ? .infinity : 80).onTapGesture {
             withAnimation(.spring()) {
-                self.expanded.toggle()
+                self.expanded = true
             }
         }.background(BlurView().gesture(DragGesture().onEnded(onEnded(value:)).onChanged(onChanged(value:))).onTapGesture {
             if !self.expanded {
@@ -121,9 +121,9 @@ public struct NowPlayingView: View {
     var bottomControls: some View {
         HStack {
                 VStack{
-                    MPVolumeViewRepresentable().font(.title).foregroundColor(.primary)
+                    MPVolumeViewRepresentable().frame(width: 50, height: 50, alignment: .center).foregroundColor(.primary).padding(.bottom,-20)
                     Text("airplay").foregroundColor(.primary)
-                }
+                }.padding(.bottom)
             Spacer()
             Button(action: {
                 self.showsQueue.toggle()
@@ -142,7 +142,7 @@ public struct NowPlayingView: View {
     }
     private func onEnded(value:DragGesture.Value){
         withAnimation(.interactiveSpring(response: 0.5, dampingFraction: 0.95, blendDuration: 0.95)) {
-            if value.translation.height > UIScreen.main.bounds.height / 3 {
+            if value.translation.height > UIScreen.main.bounds.height / 4 {
                 self.expanded = false
                 self.showsQueue = false
             }
